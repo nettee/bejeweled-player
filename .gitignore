@@ -1,1 +1,5 @@
 *.png
+
+*.swp
+
+__pycache__

@@ -4,18 +4,29 @@ import os
 import time
 import random
 
+import phone
+import image
+
 count = (8, 8)
+offset = (0, 407)
+size = (1080, 1080)
+one_size = [round(s / c) for (s, c) in zip(size, count)]
+
+class Params:
+    pass
+
+params = Params()
+params.count = count
+params.offset = offset
+params.size = size
+params.one_size = one_size
 
 class Point:
-
-    offset = (0, 407)
-    size = (1080, 1080)
-    one_size = [round(s / c) for (s, c) in zip(size, count)]
 
     def __init__(self, xyi):
         self.xyi = xyi;
         self.xy = tuple(
-                self.offset[i] + round((xyi[i] + 0.5) * self.one_size[i]) 
+                params.offset[i] + round((xyi[i] + 0.5) * params.one_size[i]) 
                 for i in range(2))
 
     def __str__(self):
@@ -60,28 +71,29 @@ class Point:
             points.append(self.below())
         return points
 
-xyis = [(xi, yi) for xi in range(count[0]) for yi in range(count[1])]
+xyis = [(xi, yi) 
+        for xi in range(params.count[0]) 
+        for yi in range(params.count[1])
+]
 points = { xyi : Point(xyi) for xyi in xyis }
-
-def tap(point):
-    command = 'adb shell input tap {0[0]:d} {0[1]:d}'.format(point.xy)
-    os.system(command)
-
-def swipe(point1, point2, time=100):
-    command = 'adb shell input swipe {0[0]:d} {0[1]:d} {1[0]:d} {1[1]:d}'.format(point1.xy, point2.xy)
-    os.system(command)
 
 if __name__ == '__main__':
 
-    target_xyis = [(xi, yi) for xi in range(8) for yi in range(6)]
+    phone.start_bejeweled()
+    input('Please press ENTER to start playing... ')
 
-    while True:
-        start_xyi = random.choice(target_xyis)
-        start_point = points[start_xyi]
-        end_point = random.choice(start_point.around())
-        print('swipe {} => {}'.format(start_point, end_point))
-        swipe(start_point, end_point)
-        time.sleep(0.05)
+    image_file = phone.screenshot()
+    image.crop(image_file, params)
+
+#    target_xyis = [(xi, yi) for xi in range(8) for yi in range(6)]
+#
+#    while True:
+#        start_xyi = random.choice(target_xyis)
+#        start_point = points[start_xyi]
+#        end_point = random.choice(start_point.around())
+#        print('swipe {} => {}'.format(start_point, end_point))
+#        phone.swipe(start_point, end_point)
+#        time.sleep(0.05)
 
 
 
