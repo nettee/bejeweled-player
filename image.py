@@ -1,8 +1,33 @@
 #!/usr/bin/env python3
 
+import colorsys
+
 from PIL import Image
 
-def crop(image_filename, params):
+def average_hue(image):
+    hues = [colorsys.rgb_to_hsv(*image.getpixel((x, y)))[0]
+        for x in range(image.size[0]) 
+        for y in range(image.size[1])
+    ]
+    avg_hue = sum(hues) / len(hues)
+    return avg_hue
+
+def get_category(image):
+    hue = average_hue(image)
+    if hue > 0.8976:
+        return '红'
+    elif hue > 0.5931:
+        return '紫'
+    elif hue > 0.3320:
+        return '绿'
+    elif hue > 0.2226:
+        return '白'
+    elif hue > 0.1379:
+        return '黄'
+    else:
+        return '土'
+
+def identify_categories(image_filename, params):
 
     count = params.count
     offset = params.offset
@@ -26,7 +51,15 @@ def crop(image_filename, params):
     }
 
     image = Image.open(image_filename)
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+
+    categories = {}
     for ((xi, yi), box) in boxes.items():
         region = image.crop(box)
-        region.save('bejeweled-cropped-{}-{}.png'.format(xi, yi))
+        center = region.crop((45, 45, 90, 90))
+        cat = get_category(center)
+        categories[(xi, yi)] = cat
+
+    return categories
 

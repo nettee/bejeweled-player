@@ -83,7 +83,7 @@ if __name__ == '__main__':
     input('Please press ENTER to start playing... ')
 
     image_file = phone.screenshot()
-    image.crop(image_file, params)
+    categories = image.identify_categories(image_file, params)
 
 #    target_xyis = [(xi, yi) for xi in range(8) for yi in range(6)]
 #
