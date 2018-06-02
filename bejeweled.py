@@ -3,6 +3,7 @@
 import os
 import time
 import random
+from collections import Counter
 
 import phone
 import image
@@ -82,20 +83,22 @@ if __name__ == '__main__':
     phone.start_bejeweled()
     input('Please press ENTER to start playing... ')
 
-    image_file = phone.screenshot()
-    categories = image.identify_categories(image_file, params)
+    while True:
+        image_file = phone.screenshot()
+        categories = image.identify_categories(image_file, params)
 
-#    target_xyis = [(xi, yi) for xi in range(8) for yi in range(6)]
-#
-#    while True:
-#        start_xyi = random.choice(target_xyis)
-#        start_point = points[start_xyi]
-#        end_point = random.choice(start_point.around())
-#        print('swipe {} => {}'.format(start_point, end_point))
-#        phone.swipe(start_point, end_point)
-#        time.sleep(0.05)
+        counter = Counter(categories.values())
+        del counter['土']
+        common_cat, _ = counter.most_common(1)[0]
 
+        target_xyis = [xyi 
+                for (xyi, cat) in categories.items() 
+                if cat == common_cat
+        ]
 
-
-
+        start_xyi = random.choice(target_xyis)
+        start_point = points[start_xyi]
+        end_point = random.choice(start_point.around())
+        print('swipe {} {} => {}'.format(common_cat, start_point, end_point))
+        phone.swipe(start_point, end_point)
 
