@@ -12,6 +12,13 @@ size = (8, 8)
 
 class Point:
 
+    left_ = lambda xy: (xy[0] - 1, xy[1])
+    right_ = lambda xy: (xy[0] + 1, xy[1])
+    up_ = lambda xy: (xy[0], xy[1] - 1)
+    down_ = lambda xy: (xy[0], xy[1] + 1)
+
+    directions = (left_, right_, up_, down_)
+
     def __init__(self, xy):
         self.xy = xy;
 
@@ -21,41 +28,28 @@ class Point:
     def __repr__(self):
         return repr(self.xy)
 
-    def has_left(self):
-        return (self.xy[0] - 1) in range(size[0])
+    def valid(self):
+        return all(self.xy[i] in range(size[i]) for i in range(2))
 
-    def has_right(self):
-        return (self.xy[0] + 1) in range(size[0])
-
-    def has_above(self):
-        return (self.xy[1] - 1) in range(size[1])
-
-    def has_below(self):
-        return (self.xy[1] + 1) in range(size[1])
+    def new_point(self, direction):
+        return Point(direction(self.xy))
 
     def left(self):
-        return Point((self.xy[0] - 1, self.xy[1]))
+        return self.new_point(Point.left_)
 
     def right(self):
-        return Point((self.xy[0] + 1, self.xy[1]))
+        return self.new_point(Point.right_)
 
     def above(self):
-        return Point((self.xy[0], self.xy[1] - 1))
+        return self.new_point(Point.up_)
 
     def below(self):
-        return Point((self.xy[0], self.xy[1] + 1))
+        return self.new_point(Point.down_)
 
     def around(self):
-        points = []
-        if self.has_left():
-            points.append(self.left())
-        if self.has_right():
-            points.append(self.right())
-        if self.has_above():
-            points.append(self.above())
-        if self.has_below():
-            points.append(self.below())
-        return points
+        candidate_points = [self.new_point(direction) 
+                for direction in self.directions]
+        return [p for p in candidate_points if p.valid()]
 
 class Board(dict): 
 
@@ -83,20 +77,38 @@ if __name__ == '__main__':
         categories = image.identify_categories(image_file)
         board.categories = categories
 
-        targets = [xy
-                for xy in board
-                if categories[xy] != '土']
+        for y in range(size[1]):
+            for x in range(size[0]):
+                print(categories[(x, y)], end=' ')
+            print()
 
-        start_point = board[random.choice(targets)]
-        print('start point: {} {}'.format(board.color(start_point), start_point))
-        jewels_around = board.jewels_around(start_point)
-        if len(jewels_around) == 0:
-            continue
-        end_point = random.choice(jewels_around)
+        same_color_pairs = []
+        for y in range(size[1]):
+            for x in range(1, size[0]):
+                if categories[(x, y)] != '土' and categories[(x, y)] == categories[(x-1, y)]:
+                    same_color_pairs.append((Point((x-1, y)), Point((x, y))))
 
-        print('swipe {} {} => {}'.format(board.color(start_point),
-            start_point, end_point))
-        phone.swipe(start_point, end_point)
+        print(same_color_pairs)
+
+        swipes = []
+        for (point_left, point_right) in same_color_pairs:
+            color = board.color(point_left)
+            left_left = point_left.left()
+            left_arounds = [left_left.left(), left_left.above(), left_left.below()]
+            right_right = point_right.right()
+            right_arounds = [right_right.right(), right_right.above(), right_right.below()]
+            left_candidates = [p for p in left_arounds if p.valid() and board.color(p) == color]
+            right_candidates = [p for p in right_arounds if p.valid() and board.color(p) == color]
+            if len(left_candidates) > 0:
+                swipes.append((left_left, random.choice(left_candidates), color))
+            elif len(right_candidates) > 0:
+                swipes.append((right_right, random.choice(right_candidates), color))
+
+        print(swipes)
+
+        for start_point, end_point, color in swipes:
+            print('swipe {} {} => {}'.format(color, start_point, end_point))
+            phone.swipe(start_point, end_point)
 
         time.sleep(0.1)
 
