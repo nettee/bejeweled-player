@@ -82,16 +82,31 @@ if __name__ == '__main__':
                 print(categories[(x, y)], end=' ')
             print()
 
-        same_color_pairs = []
+        vertical_same_color_pairs = []
+        horizontal_same_color_pairs = []
+        for x in range(size[0]):
+            for y in range(1, size[1]):
+                if categories[(x, y)] != '土' and categories[(x, y)] == categories[(x, y-1)]:
+                    vertical_same_color_pairs.append((Point((x, y-1)), Point((x, y))))
         for y in range(size[1]):
             for x in range(1, size[0]):
                 if categories[(x, y)] != '土' and categories[(x, y)] == categories[(x-1, y)]:
-                    same_color_pairs.append((Point((x-1, y)), Point((x, y))))
-
-        print(same_color_pairs)
+                    horizontal_same_color_pairs.append((Point((x-1, y)), Point((x, y))))
 
         swipes = []
-        for (point_left, point_right) in same_color_pairs:
+        for (point_above, point_below) in vertical_same_color_pairs:
+            color = board.color(point_above)
+            above_above = point_above.above()
+            above_arounds = [above_above.above(), above_above.left(), above_above.right()]
+            below_below = point_below.below()
+            below_arounds = [below_below.below(), below_below.left(), below_below.right()]
+            above_candidates = [p for p in above_arounds if p.valid() and board.color(p) == color]
+            below_candidates = [p for p in below_arounds if p.valid() and board.color(p) == color]
+            if len(above_candidates) > 0:
+                swipes.append((above_above, random.choice(above_candidates), color))
+            elif len(below_candidates) > 0:
+                swipes.append((below_below, random.choice(below_candidates), color))
+        for (point_left, point_right) in horizontal_same_color_pairs:
             color = board.color(point_left)
             left_left = point_left.left()
             left_arounds = [left_left.left(), left_left.above(), left_left.below()]
@@ -104,9 +119,10 @@ if __name__ == '__main__':
             elif len(right_candidates) > 0:
                 swipes.append((right_right, random.choice(right_candidates), color))
 
-        print(swipes)
+        target_swipes = random.sample(swipes, 5) if len(swipes) > 5 else swipes
+        print(target_swipes)
 
-        for start_point, end_point, color in swipes:
+        for start_point, end_point, color in target_swipes:
             print('swipe {} {} => {}'.format(color, start_point, end_point))
             phone.swipe(start_point, end_point)
 
