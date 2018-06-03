@@ -57,11 +57,21 @@ class Point:
             points.append(self.below())
         return points
 
-xys = [(x, y) 
-        for x in range(size[0]) 
-        for y in range(size[1])
-]
-points = { xy : Point(xy) for xy in xys }
+class Board(dict): 
+
+    def __init__(self):
+        for x in range(size[0]):
+            for y in range(size[1]):
+                xy = (x, y)
+                self[xy] = Point(xy)
+
+    def color(self, point):
+        return self.categories[point.xy]
+
+    def jewels_around(self, point):
+        return [p for p in point.around() if self.categories[p.xy] != '土']
+
+board = Board()
 
 if __name__ == '__main__':
 
@@ -71,20 +81,22 @@ if __name__ == '__main__':
     while True:
         image_file = phone.screenshot()
         categories = image.identify_categories(image_file)
+        board.categories = categories
 
-        counter = Counter(categories.values())
-        del counter['土']
-        common_cat, _ = counter.most_common(1)[0]
+        targets = [xy
+                for xy in board
+                if categories[xy] != '土']
 
-        target_xys = [xy 
-                for (xy, cat) in categories.items() 
-                if cat == common_cat
-        ]
+        start_point = board[random.choice(targets)]
+        print('start point: {} {}'.format(board.color(start_point), start_point))
+        jewels_around = board.jewels_around(start_point)
+        if len(jewels_around) == 0:
+            continue
+        end_point = random.choice(jewels_around)
 
-        start_xy = random.choice(target_xys)
-        start_point = points[start_xy]
-        end_point = random.choice(start_point.around())
-        print('swipe {} {} => {}'.format(common_cat, start_point, end_point))
+        print('swipe {} {} => {}'.format(board.color(start_point),
+            start_point, end_point))
         phone.swipe(start_point, end_point)
+
         time.sleep(0.1)
 
