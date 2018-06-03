@@ -8,57 +8,42 @@ from collections import Counter
 import phone
 import image
 
-count = (8, 8)
-offset = (0, 407)
-size = (1080, 1080)
-one_size = [round(s / c) for (s, c) in zip(size, count)]
-
-class Params:
-    pass
-
-params = Params()
-params.count = count
-params.offset = offset
-params.size = size
-params.one_size = one_size
+size = (8, 8)
 
 class Point:
 
-    def __init__(self, xyi):
-        self.xyi = xyi;
-        self.xy = tuple(
-                params.offset[i] + round((xyi[i] + 0.5) * params.one_size[i]) 
-                for i in range(2))
+    def __init__(self, xy):
+        self.xy = xy;
 
     def __str__(self):
-        return str(self.xyi)
+        return str(self.xy)
 
     def __repr__(self):
-        return repr(self.xyi)
+        return repr(self.xy)
 
     def has_left(self):
-        return (self.xyi[0] - 1) in range(count[0])
+        return (self.xy[0] - 1) in range(size[0])
 
     def has_right(self):
-        return (self.xyi[0] + 1) in range(count[0])
+        return (self.xy[0] + 1) in range(size[0])
 
     def has_above(self):
-        return (self.xyi[1] - 1) in range(count[1])
+        return (self.xy[1] - 1) in range(size[1])
 
     def has_below(self):
-        return (self.xyi[1] + 1) in range(count[1])
+        return (self.xy[1] + 1) in range(size[1])
 
     def left(self):
-        return Point((self.xyi[0] - 1, self.xyi[1]))
+        return Point((self.xy[0] - 1, self.xy[1]))
 
     def right(self):
-        return Point((self.xyi[0] + 1, self.xyi[1]))
+        return Point((self.xy[0] + 1, self.xy[1]))
 
     def above(self):
-        return Point((self.xyi[0], self.xyi[1] - 1))
+        return Point((self.xy[0], self.xy[1] - 1))
 
     def below(self):
-        return Point((self.xyi[0], self.xyi[1] + 1))
+        return Point((self.xy[0], self.xy[1] + 1))
 
     def around(self):
         points = []
@@ -72,11 +57,11 @@ class Point:
             points.append(self.below())
         return points
 
-xyis = [(xi, yi) 
-        for xi in range(params.count[0]) 
-        for yi in range(params.count[1])
+xys = [(x, y) 
+        for x in range(size[0]) 
+        for y in range(size[1])
 ]
-points = { xyi : Point(xyi) for xyi in xyis }
+points = { xy : Point(xy) for xy in xys }
 
 if __name__ == '__main__':
 
@@ -85,20 +70,21 @@ if __name__ == '__main__':
 
     while True:
         image_file = phone.screenshot()
-        categories = image.identify_categories(image_file, params)
+        categories = image.identify_categories(image_file)
 
         counter = Counter(categories.values())
         del counter['土']
         common_cat, _ = counter.most_common(1)[0]
 
-        target_xyis = [xyi 
-                for (xyi, cat) in categories.items() 
+        target_xys = [xy 
+                for (xy, cat) in categories.items() 
                 if cat == common_cat
         ]
 
-        start_xyi = random.choice(target_xyis)
-        start_point = points[start_xyi]
+        start_xy = random.choice(target_xys)
+        start_point = points[start_xy]
         end_point = random.choice(start_point.around())
         print('swipe {} {} => {}'.format(common_cat, start_point, end_point))
         phone.swipe(start_point, end_point)
+        time.sleep(0.1)
 

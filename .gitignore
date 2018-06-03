@@ -1,5 +1,9 @@
+# data files
+data/
 *.png
 
+# Vim files
 *.swp
 
+# Python intermediate files
 __pycache__

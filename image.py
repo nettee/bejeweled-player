@@ -4,6 +4,12 @@ import colorsys
 
 from PIL import Image
 
+board_resolution = (1080, 1080)
+board_offset = (0, 407)
+board_size = (8, 8)
+jewel_resolution = tuple(round(s / c)
+        for (s, c) in zip(board_resolution, board_size))
+
 def average_hue(image):
     hues = [colorsys.rgb_to_hsv(*image.getpixel((x, y)))[0]
         for x in range(image.size[0]) 
@@ -27,27 +33,23 @@ def get_category(image):
     else:
         return '土'
 
-def identify_categories(image_filename, params):
+def identify_categories(image_filename):
 
-    count = params.count
-    offset = params.offset
-    one_size = params.one_size
-
-    xyis = [(xi, yi)
-            for xi in range(count[0])
-            for yi in range(count[1])
+    xys = [(x, y)
+            for x in range(board_size[0])
+            for y in range(board_size[1])
     ]
-    upper_lefts = { xyi: 
-        [offset[i] + xyi[i] * one_size[i] for i in range(2)]
-        for xyi in xyis
+    upper_lefts = { xy: 
+        [board_offset[i] + xy[i] * jewel_resolution[i] for i in range(2)]
+        for xy in xys
     }
-    bottom_rights = { xyi: 
-        [offset[i] + (xyi[i] + 1) * one_size[i] for i in range(2)]
-        for xyi in xyis
+    bottom_rights = { xy: 
+        [board_offset[i] + (xy[i] + 1) * jewel_resolution[i] for i in range(2)]
+        for xy in xys
     }
-    boxes = { xyi:
-        tuple(upper_lefts[xyi] + bottom_rights[xyi])
-        for xyi in xyis
+    boxes = { xy:
+        tuple(upper_lefts[xy] + bottom_rights[xy])
+        for xy in xys
     }
 
     image = Image.open(image_filename)
@@ -55,11 +57,11 @@ def identify_categories(image_filename, params):
         image = image.convert('RGB')
 
     categories = {}
-    for ((xi, yi), box) in boxes.items():
+    for ((x, y), box) in boxes.items():
         region = image.crop(box)
         center = region.crop((45, 45, 90, 90))
         cat = get_category(center)
-        categories[(xi, yi)] = cat
+        categories[(x, y)] = cat
 
     return categories
 
