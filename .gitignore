@@ -5,5 +5,8 @@ data/
 # Vim files
 *.swp
 
+# Pycharm files
+.idea/
+
 # Python intermediate files
 __pycache__
