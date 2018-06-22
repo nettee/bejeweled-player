@@ -99,74 +99,62 @@ def get_candidate_matches(board):
             if categories[(x, y)] != '土' and categories[(x, y)] == categories[(x-2, y)]:
                 horizontal_T_bases.append((Point((x-2, y)), Point((x, y))))
 
+    def find_matches(base, slot_relatives, target_relatives):
+        assert(len(slot_relatives) == len(target_relatives))
+        color = board.color(base[0])
+        for slot_rel, targets_rel in zip(slot_relatives, target_relatives):
+            slot = slot_rel(base)
+            if not slot.valid() or board.color(slot) == '土':
+                continue
+            targets = targets_rel(slot)
+            for target in targets:
+                if not target.valid() or board.color(target) == '土':
+                    continue
+                match = Match(slot=slot, target=target, bases=base, color=color)
+                yield match
+
+    match_patterns = [
+        (
+            vertical_L_bases,
+            [lambda base: base[0].above(),
+             lambda base: base[1].below()],
+            [lambda slot: (slot.above(), slot.left(), slot.right()),
+             lambda slot: (slot.below(), slot.left(), slot.right())]
+        ),
+        (
+            vertical_T_bases,
+            [lambda base: base[0].below()],
+            [lambda slot: (slot.left(), slot.right())]
+        ),
+        (
+            horizontal_L_bases,
+            [lambda base: base[0].left(),
+             lambda base: base[1].right()],
+            [lambda slot: (slot.left(), slot.above(), slot.below()),
+             lambda slot: (slot.right(), slot.above(), slot.below())]
+        ),
+        (
+            horizontal_T_bases,
+            [lambda base: base[0].right()],
+            [lambda slot: (slot.above(), slot.below())]
+        ),
+    ]
+
     matches = []
 
-    for bases in vertical_L_bases:
-        base_above, base_below = bases
-        color = board.color(base_above)
-
-        above_above = base_above.above()
-        if above_above.valid() and board.color(above_above) != '土':
-            above_arounds = [above_above.above(), above_above.left(), above_above.right()]
-            above_candidates = [p for p in above_arounds if p.valid() and board.color(p) == color]
-            for c in above_candidates:
-                match = Match(slot=above_above, target=c, bases=bases, color=color)
-                matches.append(match)
-
-        below_below = base_below.below()
-        if below_below.valid() and board.color(below_below) != '土':
-            below_arounds = [below_below.below(), below_below.left(), below_below.right()]
-            below_candidates = [p for p in below_arounds if p.valid() and board.color(p) == color]
-            for c in below_candidates:
-                match = Match(slot=below_below, target=c, bases=bases, color=color)
-                matches.append(match)
-
-    for bases in horizontal_L_bases:
-        base_left, base_right = bases
-        color = board.color(base_left)
-
-        left_left = base_left.left()
-        if left_left.valid() and board.color(left_left) != '土':
-            left_arounds = [left_left.left(), left_left.above(), left_left.below()]
-            left_candidates = [p for p in left_arounds if p.valid() and board.color(p) == color]
-            for c in left_candidates:
-                match = Match(slot=left_left, target=c, bases=bases, color=color)
-                matches.append(match)
-
-        right_right = base_right.right()
-        if right_right.valid() and board.color(right_right) != '土':
-            right_arounds = [right_right.right(), right_right.above(), right_right.below()]
-            right_candidates = [p for p in right_arounds if p.valid() and board.color(p) == color]
-            for c in right_candidates:
-                match = Match(slot=right_right, target=c, bases=bases, color=color)
-                matches.append(match)
-
-    for bases in vertical_T_bases:
-        base_above, base_below = bases
-        color = board.color(base_above)
-        middle = base_above.below()
-        if middle.valid() and board.color(middle) != '土':
-            candidates = [middle.left(), middle.right()]
-            for c in candidates:
-                match = Match(slot=middle, target=c, bases=bases, color=color)
-                matches.append(match)
-
-    for bases in horizontal_T_bases:
-        base_left, base_right = bases
-        color = board.color(base_left)
-        middle = base_left.right()
-        if middle.valid() and board.color(middle) != '土':
-            candidates = [middle.above(), middle.below()]
-            for c in candidates:
-                match = Match(slot=middle, target=c, bases=bases, color=color)
-                matches.append(match)
+    for bases, slot_relatives, target_relatives in match_patterns:
+        for base in bases:
+            matches_gen = find_matches(base, slot_relatives, target_relatives)
+            for m in matches_gen:
+                matches.append(m)
 
     return matches
 
 
 def select_matches(board, matches):
-    sorted_matches = sorted(matches, key=lambda m: m.slot.xy[1], reverse=True)
-    target_matches = sorted_matches[:5] if len(sorted_matches) > 5 else sorted_matches
+    # sorted_matches = sorted(matches, key=lambda m: m.slot.xy[1], reverse=True)
+    # target_matches = sorted_matches[:5] if len(sorted_matches) > 5 else sorted_matches
+    target_matches = random.sample(matches, 5) if len(matches) > 5 else matches
     return target_matches
 
 
