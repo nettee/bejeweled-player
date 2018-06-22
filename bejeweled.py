@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-import os
+import sys
 import time
 import random
-from collections import Counter
 
 import phone
 import image
@@ -75,7 +74,7 @@ class Match:
         self.color = color
 
 
-def get_candidate_matches(board):
+def get_candidate_matches(board, log_file=None):
 
     categories = board.categories
 
@@ -110,8 +109,9 @@ def get_candidate_matches(board):
             for target in targets:
                 if not target.valid() or board.color(target) == '土':
                     continue
-                match = Match(slot=slot, target=target, bases=base, color=color)
-                yield match
+                if board.color(target) == color:
+                    match = Match(slot=slot, target=target, bases=base, color=color)
+                    yield match
 
     match_patterns = [
         (
@@ -170,19 +170,25 @@ if __name__ == '__main__':
         categories = image.identify_categories(image_file)
         board.categories = categories
 
-        candidate_matches = get_candidate_matches(board)
+        log_file = open(image_file + '.log', 'w')
+
+        candidate_matches = get_candidate_matches(board, log_file=log_file)
 
         for y in range(size[1]):
             for x in range(size[0]):
-                print(categories[(x, y)], end=' ')
-            print()
+                print(categories[(x, y)], end=' ', file=log_file)
+            print(file=log_file)
 
         target_matches = select_matches(board, candidate_matches)
-        print(target_matches)
+        print(target_matches, file=sys.stdout)
+        print(target_matches, file=log_file)
 
         for match in target_matches:
-            print('swipe {} {} => {}'.format(match.color, match.slot, match.target))
+            print('swipe {} {} => {}'.format(match.color, match.slot, match.target), file=sys.stdout)
+            print('swipe {} {} => {}'.format(match.color, match.slot, match.target), file=log_file)
             phone.swipe(match.slot, match.target)
+
+        log_file.close()
 
         time.sleep(0.1)
 
