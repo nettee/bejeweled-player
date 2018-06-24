@@ -4,6 +4,7 @@ import sys
 import time
 import random
 
+import color
 import phone
 import image
 
@@ -62,8 +63,11 @@ class Board(dict):
     def color(self, point):
         return self.categories[point.xy]
 
+    def colorful(self, point):
+        return self.color(point) != color.EARTH
+
     def jewels_around(self, point):
-        return [p for p in point.around() if self.categories[p.xy] != '土']
+        return [p for p in point.around() if self.colorful(p)]
 
 class Match:
 
@@ -72,6 +76,26 @@ class Match:
         self.target = target
         self.bases = bases
         self.color = color
+
+    @property
+    def eliminate_places(self):
+        return (self.slot, self.bases[0], self.bases[1])
+
+    @property
+    def min_x(self):
+        return min(p.xy[0] for p in self.eliminate_places)
+
+    @property
+    def min_y(self):
+        return min(p.xy[1] for p in self.eliminate_places)
+
+    @property
+    def max_x(self):
+        return max(p.xy[0] for p in self.eliminate_places)
+
+    @property
+    def max_y(self):
+        return max(p.xy[1] for p in self.eliminate_places)
 
 
 def get_candidate_matches(board, log_file=None):
@@ -85,17 +109,17 @@ def get_candidate_matches(board, log_file=None):
 
     for x in range(size[0]):
         for y in range(1, size[1]):
-            if categories[(x, y)] != '土' and categories[(x, y)] == categories[(x, y-1)]:
+            if categories[(x, y)] != color.EARTH and categories[(x, y)] == categories[(x, y-1)]:
                 vertical_L_bases.append((Point((x, y-1)), Point((x, y))))
         for y in range(2, size[1]):
-            if categories[(x, y)] != '土' and categories[(x, y)] == categories[(x, y-2)]:
+            if categories[(x, y)] != color.EARTH and categories[(x, y)] == categories[(x, y-2)]:
                 vertical_T_bases.append((Point((x, y-2)), Point((x, y))))
     for y in range(size[1]):
         for x in range(1, size[0]):
-            if categories[(x, y)] != '土' and categories[(x, y)] == categories[(x-1, y)]:
+            if categories[(x, y)] != color.EARTH and categories[(x, y)] == categories[(x-1, y)]:
                 horizontal_L_bases.append((Point((x-1, y)), Point((x, y))))
         for x in range(2, size[0]):
-            if categories[(x, y)] != '土' and categories[(x, y)] == categories[(x-2, y)]:
+            if categories[(x, y)] != color.EARTH and categories[(x, y)] == categories[(x-2, y)]:
                 horizontal_T_bases.append((Point((x-2, y)), Point((x, y))))
 
     def find_matches(base, slot_relatives, target_relatives):
@@ -103,11 +127,11 @@ def get_candidate_matches(board, log_file=None):
         color = board.color(base[0])
         for slot_rel, targets_rel in zip(slot_relatives, target_relatives):
             slot = slot_rel(base)
-            if not slot.valid() or board.color(slot) == '土':
+            if not slot.valid() or not board.colorful(slot):
                 continue
             targets = targets_rel(slot)
             for target in targets:
-                if not target.valid() or board.color(target) == '土':
+                if not target.valid() or not board.color(target):
                     continue
                 if board.color(target) == color:
                     match = Match(slot=slot, target=target, bases=base, color=color)

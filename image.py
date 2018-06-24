@@ -2,6 +2,8 @@
 
 import colorsys
 
+import color
+
 from PIL import Image
 
 board_resolution = (1080, 1080)
@@ -21,17 +23,17 @@ def average_hue(image):
 def get_category(image):
     hue = average_hue(image)
     if hue > 0.8976:
-        return '红'
+        return color.RED
     elif hue > 0.5931:
-        return '紫'
+        return color.PURPLE
     elif hue > 0.3320:
-        return '绿'
+        return color.GREEN
     elif hue > 0.2226:
-        return '白'
+        return color.WHITE
     elif hue > 0.1379:
-        return '黄'
+        return color.YELLOW
     else:
-        return '土'
+        return color.EARTH
 
 def identify_categories(image_filename):
 

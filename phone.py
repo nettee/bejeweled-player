@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+from pathlib import Path
 from datetime import datetime
 
 board_resolution = (1080, 1080)
@@ -8,6 +9,10 @@ board_offset = (0, 407)
 board_size = (8, 8)
 jewel_resolution = tuple(round(s / c) 
         for (s, c) in zip(board_resolution, board_size))
+
+data_dir = Path('data')
+if not data_dir.exists():
+    data_dir.mkdir()
 
 def tap_pixel(xy):
     return tuple(
