@@ -62,6 +62,17 @@ class Board(dict):
                 xy = (x, y)
                 self[xy] = Point(xy)
 
+    def first_earth(self, x):
+        for y in range(size[1]):
+            if self.categories[(x, y)] == color.EARTH:
+                return y
+        else:
+            return size[1]
+
+    def situation(self, categories):
+        self.categories = categories
+        self.baseline = [self.first_earth(x) for x in range(size[0])]
+
     def color(self, point):
         return self.categories[point.xy]
 
@@ -178,15 +189,27 @@ def get_candidate_matches(board, log_file=None):
     return matches
 
 
-def weigh(match):
-    return match.max_y + 1
+y_weights = {
+    0: 0.1,
+    1: 0.2,
+    2: 0.3,
+    3: 0.4,
+    4: 0.6,
+    5: 0.8,
+    6: 0.7,
+    7: 0.6,
+}
+
+
+def weigh(board, match):
+    return y_weights[match.max_y]
 
 
 def select_matches(board, matches, choice_size=4):
     if len(matches) <= choice_size:
         return matches
 
-    weights = [weigh(m) for m in matches]
+    weights = [weigh(board, m) for m in matches]
     weights_sum = sum(weights)
     probs = [w / weights_sum for w in weights]
 
@@ -205,7 +228,7 @@ if __name__ == '__main__':
     while True:
         image_file = phone.screenshot()
         categories = image.identify_categories(image_file)
-        board.categories = categories
+        board.situation(categories)
 
         log_file = open(image_file + '.log', 'w')
 
