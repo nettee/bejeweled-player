@@ -2,13 +2,15 @@
 
 import sys
 import time
-import random
+
+import numpy as np
 
 import color
 import phone
 import image
 
 size = (8, 8)
+
 
 class Point:
 
@@ -68,6 +70,7 @@ class Board(dict):
 
     def jewels_around(self, point):
         return [p for p in point.around() if self.colorful(p)]
+
 
 class Match:
 
@@ -175,11 +178,21 @@ def get_candidate_matches(board, log_file=None):
     return matches
 
 
-def select_matches(board, matches):
-    # sorted_matches = sorted(matches, key=lambda m: m.slot.xy[1], reverse=True)
-    # target_matches = sorted_matches[:5] if len(sorted_matches) > 5 else sorted_matches
-    target_matches = random.sample(matches, 5) if len(matches) > 5 else matches
-    return target_matches
+def weigh(match):
+    return match.max_y + 1
+
+
+def select_matches(board, matches, choice_size=4):
+    if len(matches) <= choice_size:
+        return matches
+
+    weights = [weigh(m) for m in matches]
+    weights_sum = sum(weights)
+    probs = [w / weights_sum for w in weights]
+
+    a = np.arange(len(matches))
+    indices = np.random.choice(a, choice_size, replace=False, p=probs)
+    return [matches[i] for i in indices]
 
 
 if __name__ == '__main__':
