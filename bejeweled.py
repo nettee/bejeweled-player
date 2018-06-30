@@ -216,7 +216,7 @@ def weigh(board, match):
 
 def select_matches(board, matches, choice_size=4):
     if len(matches) <= choice_size:
-        return matches
+        return matches, None
 
     weights = [weigh(board, m) for m in matches]
     weights_sum = sum(weights)
@@ -224,7 +224,8 @@ def select_matches(board, matches, choice_size=4):
 
     a = np.arange(len(matches))
     indices = np.random.choice(a, choice_size, replace=False, p=probs)
-    return [matches[i] for i in indices]
+    selected = [matches[i] for i in indices]
+    return selected, weights
 
 
 # Shared variable
@@ -246,7 +247,7 @@ def main():
 
         candidate_matches = get_candidate_matches(board, log_file=log_file)
 
-        target_matches = select_matches(board, candidate_matches)
+        target_matches, weights = select_matches(board, candidate_matches)
 
         for match in target_matches:
             phone.swipe(match.slot, match.target)
@@ -255,6 +256,7 @@ def main():
             'image_file': '../' + image_file,
             'colors': categories,
             'candidate_matches': candidate_matches,
+            'weights': weights,
             'target_matches': target_matches,
         }
         rows_data.append(row_data)

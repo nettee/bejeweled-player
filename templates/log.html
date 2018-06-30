@@ -42,6 +42,9 @@ table {
 
 table, th, td {
     border: 1px solid black;
+    text-align: center;
+    padding-left: 3px;
+    padding-right: 3px;
 }
 </style>
 </head>
@@ -59,10 +62,17 @@ table, th, td {
 <div class="column column-2">
     <p><strong>Stage {{ loop.index }}:</strong></p>
     <table>
+        <tr>
+            <th></th>
+        {% for x in range(8) %}
+            <th>{{ x }}</th>
+        {% endfor %}
+        </tr>
         {% for y in range(8) %}
         <tr>
+            <td><strong>{{ y }}</strong></td>
             {% for x in range(8) %}
-            <td>&nbsp;{{ row_data.colors[(x,y)] }}&nbsp;</td>
+            <td>{{ row_data.colors[(x,y)] }}</td>
             {% endfor %}
         </tr>
         {% endfor %}
@@ -70,11 +80,28 @@ table, th, td {
 </div>
 <div class="column column-3">
     <p>Candidate matches:</p>
-    <ul>
+    <table>
+        <tr>
+            <th>Color</th>
+            <th>Slot</th>
+            <th>Target</th>
+            <th>Dir</th>
+            <th>Weight</th>
+        </tr>
         {% for match in row_data.candidate_matches %}
-        <li>{{ match.slot }} <=> {{ match.target }} ({{ match.color }})</li>
+        <tr>
+            <td>{{ match.color }}</td>
+            <td>{{ match.slot }}</td>
+            <td>{{ match.target }}</td>
+            <td></td>
+            {% if row_data.weights %}
+            <td>{{ row_data.weights[loop.index0] }}</td>
+            {% else %}
+            <td></td>
+            {% endif %}
+        </tr>
         {% endfor %}
-    </ul>
+    </table>
 </div>
 <div class="column column-4">
     <p>Target matches:</p>
