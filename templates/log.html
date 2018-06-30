@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* {
+    box-sizing: border-box;
+}
+
+/* Create two unequal columns that floats next to each other */
+.column {
+    float: left;
+    padding: 10px;
+}
+
+.column-1 {
+  width: 30%;
+}
+
+.column-2 {
+  width: 20%;
+}
+
+.column-3 {
+  width: 25%;
+}
+
+.column-4 {
+  width: 25%;
+}
+
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+</style>
+</head>
+<body>
+
+<h2>Bejeweled player</h2>
+
+{% for row_data in rows_data %}
+
+<div class="row">
+<div class="column column-1">
+    <img src="{{ row_data.image_file }}" height="640" width="360"/>
+</div>
+
+<div class="column column-2">
+    <p><strong>Stage {{ loop.index }}:</strong></p>
+    <table>
+        {% for y in range(8) %}
+        <tr>
+            {% for x in range(8) %}
+            <td>&nbsp;{{ row_data.colors[(x,y)] }}&nbsp;</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+<div class="column column-3">
+    <p>Candidate matches:</p>
+    <ul>
+        {% for match in row_data.candidate_matches %}
+        <li>{{ match.slot }} <=> {{ match.target }} ({{ match.color }})</li>
+        {% endfor %}
+    </ul>
+</div>
+<div class="column column-4">
+    <p>Target matches:</p>
+    <ul>
+        {% for match in row_data.target_matches %}
+        <li>Swipe {{ match.slot }} => {{ match.target }} ({{ match.color }})</li>
+        {% endfor %}
+    </ul>
+</div>
+</div>
+
+<hr/>
+
+{% endfor %}
+
+</body>
+</html>

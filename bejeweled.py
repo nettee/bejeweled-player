@@ -237,12 +237,7 @@ def main():
     now = datetime.now()
     log_file = open('log/{}.html'.format(now.strftime("%Y-%m-%d-%H-%M-%S")), 'w')
 
-    start_file = open('templates/start.html')
-    print(start_file.read(), file=log_file)
-    start_file.close()
-
-    env = Environment(loader=FileSystemLoader('./templates'))
-    template = env.get_template('logitem.html')
+    rows_data = []
 
     while working:
         image_file = phone.screenshot()
@@ -256,20 +251,22 @@ def main():
         for match in target_matches:
             phone.swipe(match.slot, match.target)
 
-        data = {
+        row_data = {
             'image_file': '../' + image_file,
             'colors': categories,
+            'candidate_matches': candidate_matches,
             'target_matches': target_matches,
         }
-        print(template.render(**data), file=log_file)
+        rows_data.append(row_data)
 
         time.sleep(0.1)
 
     print('Stops working.')
 
-    end_file = open('templates/end.html')
-    print(end_file.read(), file=log_file)
-    end_file.close()
+    env = Environment(loader=FileSystemLoader('./templates'))
+    template = env.get_template('log.html')
+    print(template.render(rows_data=rows_data), file=log_file)
+
     log_file.close()
 
 
