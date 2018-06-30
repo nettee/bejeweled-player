@@ -237,6 +237,10 @@ def main():
     now = datetime.now()
     log_file = open('log/{}.html'.format(now.strftime("%Y-%m-%d-%H-%M-%S")), 'w')
 
+    start_file = open('templates/start.html')
+    print(start_file.read(), file=log_file)
+    start_file.close()
+
     env = Environment(loader=FileSystemLoader('./templates'))
     template = env.get_template('logitem.html')
 
@@ -262,6 +266,10 @@ def main():
         time.sleep(0.1)
 
     print('Stops working.')
+
+    end_file = open('templates/end.html')
+    print(end_file.read(), file=log_file)
+    end_file.close()
     log_file.close()
 
 
