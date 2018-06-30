@@ -3,14 +3,22 @@
 import time
 from datetime import datetime
 import threading
+from pathlib import Path
 
 import numpy as np
+
+from jinja2 import Environment, FileSystemLoader
 
 import color
 import image
 import phone
 
 size = (8, 8)
+
+
+log_dir = Path('log')
+if not log_dir.exists():
+    log_dir.mkdir()
 
 
 class Point:
@@ -223,32 +231,33 @@ def select_matches(board, matches, choice_size=4):
 working = True
 
 
-def loop():
+def main():
     board = Board()
 
     now = datetime.now()
-    log_file = open('{}.log'.format(now.strftime("%Y-%m-%d-%H-%M-%S")), 'w')
+    log_file = open('log/{}.html'.format(now.strftime("%Y-%m-%d-%H-%M-%S")), 'w')
+
+    env = Environment(loader=FileSystemLoader('./templates'))
+    template = env.get_template('logitem.html')
 
     while working:
         image_file = phone.screenshot()
         categories = image.identify_categories(image_file)
         board.situation(categories)
 
-        print('image file: {}'.format(image_file), file=log_file)
-
         candidate_matches = get_candidate_matches(board, log_file=log_file)
 
-        for y in range(size[1]):
-            for x in range(size[0]):
-                print(categories[(x, y)], end=' ', file=log_file)
-            print(file=log_file)
-
         target_matches = select_matches(board, candidate_matches)
-        print(target_matches, file=log_file)
 
         for match in target_matches:
-            print('swipe {} {} => {}'.format(match.color, match.slot, match.target), file=log_file)
             phone.swipe(match.slot, match.target)
+
+        data = {
+            'image_file': '../' + image_file,
+            'colors': categories,
+            'target_matches': target_matches,
+        }
+        print(template.render(**data), file=log_file)
 
         time.sleep(0.1)
 
@@ -261,7 +270,7 @@ if __name__ == '__main__':
     phone.start_bejeweled()
     input('Please press ENTER to start playing... ')
 
-    t = threading.Thread(target=loop, name='LoopThread')
+    t = threading.Thread(target=main, name='MainThread')
     t.start()
 
     input('Please press ENTER to end playing...')
