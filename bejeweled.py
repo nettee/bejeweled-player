@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-import sys
 import time
+from datetime import datetime
+import threading
 
 import numpy as np
 
 import color
-import phone
 import image
+import phone
 
 size = (8, 8)
 
@@ -218,19 +219,22 @@ def select_matches(board, matches, choice_size=4):
     return [matches[i] for i in indices]
 
 
-if __name__ == '__main__':
+# Shared variable
+working = True
 
-    phone.start_bejeweled()
-    input('Please press ENTER to start playing... ')
 
+def loop():
     board = Board()
 
-    while True:
+    now = datetime.now()
+    log_file = open('{}.log'.format(now.strftime("%Y-%m-%d-%H-%M-%S")), 'w')
+
+    while working:
         image_file = phone.screenshot()
         categories = image.identify_categories(image_file)
         board.situation(categories)
 
-        log_file = open(image_file + '.log', 'w')
+        print('image file: {}'.format(image_file), file=log_file)
 
         candidate_matches = get_candidate_matches(board, log_file=log_file)
 
@@ -240,15 +244,30 @@ if __name__ == '__main__':
             print(file=log_file)
 
         target_matches = select_matches(board, candidate_matches)
-        print(target_matches, file=sys.stdout)
         print(target_matches, file=log_file)
 
         for match in target_matches:
-            print('swipe {} {} => {}'.format(match.color, match.slot, match.target), file=sys.stdout)
             print('swipe {} {} => {}'.format(match.color, match.slot, match.target), file=log_file)
             phone.swipe(match.slot, match.target)
 
-        log_file.close()
-
         time.sleep(0.1)
+
+    print('Stops working.')
+    log_file.close()
+
+
+if __name__ == '__main__':
+
+    phone.start_bejeweled()
+    input('Please press ENTER to start playing... ')
+
+    t = threading.Thread(target=loop, name='LoopThread')
+    t.start()
+
+    input('Please press ENTER to end playing...')
+    working = False
+    t.join()
+    print('Bye.')
+
+
 
