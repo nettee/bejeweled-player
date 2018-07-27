@@ -120,6 +120,29 @@ class Match:
     def max_y(self):
         return max(p.xy[1] for p in self.eliminate_places)
 
+    @property
+    def dir(self):
+        if self.slot.xy[0] == self.target.xy[0]:
+            ydiff = self.target.xy[1] - self.slot.xy[1]
+            if ydiff < 0:
+                return 'down'
+            elif ydiff > 0:
+                return 'up'
+            else:
+                return 'same'
+        elif self.slot.xy[1] == self.target.xy[1]:
+            xdiff = self.target.xy[0] - self.slot.xy[0]
+            if xdiff < 0:
+                return 'left'
+            elif xdiff > 0:
+                return 'right'
+            else:
+                return 'same'
+        else:
+            return 'unknown'
+
+
+
 
 def get_candidate_matches(board, log_file=None):
 
